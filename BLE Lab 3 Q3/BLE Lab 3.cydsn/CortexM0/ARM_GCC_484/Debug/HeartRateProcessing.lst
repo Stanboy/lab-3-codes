@@ -1,0 +1,1473 @@
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 1
+
+
+   1              		.cpu cortex-m0
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 6
+  10              		.eabi_attribute 34, 0
+  11              		.eabi_attribute 18, 4
+  12              		.code	16
+  13              		.file	"HeartRateProcessing.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.global	heartRate
+  18              		.bss
+  19              		.type	heartRate, %object
+  20              		.size	heartRate, 1
+  21              	heartRate:
+  22 0000 00       		.space	1
+  23              		.global	__aeabi_uidiv
+  24              		.section	.text.ProcessHeartRateSignal,"ax",%progbits
+  25              		.align	2
+  26              		.global	ProcessHeartRateSignal
+  27              		.code	16
+  28              		.thumb_func
+  29              		.type	ProcessHeartRateSignal, %function
+  30              	ProcessHeartRateSignal:
+  31              	.LFB35:
+  32              		.file 1 ".\\HeartRateProcessing.c"
+   1:.\HeartRateProcessing.c **** /*****************************************************************************
+   2:.\HeartRateProcessing.c **** * File Name: HeartRateProcessing.c
+   3:.\HeartRateProcessing.c **** *
+   4:.\HeartRateProcessing.c **** * Version: 1.0
+   5:.\HeartRateProcessing.c **** *
+   6:.\HeartRateProcessing.c **** * Description:
+   7:.\HeartRateProcessing.c **** * This file implements the heart rate measurement capability in the the PSoC 4 
+   8:.\HeartRateProcessing.c **** * BLE Lab 3.
+   9:.\HeartRateProcessing.c **** *
+  10:.\HeartRateProcessing.c **** * Hardware Dependency:
+  11:.\HeartRateProcessing.c **** * CY8CKIT-042 BLE Pioneer Kit
+  12:.\HeartRateProcessing.c **** *
+  13:.\HeartRateProcessing.c **** ******************************************************************************
+  14:.\HeartRateProcessing.c **** * Copyright (2014), Cypress Semiconductor Corporation.
+  15:.\HeartRateProcessing.c **** ******************************************************************************
+  16:.\HeartRateProcessing.c **** * This software is owned by Cypress Semiconductor Corporation (Cypress) and is
+  17:.\HeartRateProcessing.c **** * protected by and subject to worldwide patent protection (United States and
+  18:.\HeartRateProcessing.c **** * foreign), United States copyright laws and international treaty provisions.
+  19:.\HeartRateProcessing.c **** * Cypress hereby grants to licensee a personal, non-exclusive, non-transferable
+  20:.\HeartRateProcessing.c **** * license to copy, use, modify, create derivative works of, and compile the
+  21:.\HeartRateProcessing.c **** * Cypress Source Code and derivative works for the sole purpose of creating
+  22:.\HeartRateProcessing.c **** * custom software in support of licensee product to be used only in conjunction
+  23:.\HeartRateProcessing.c **** * with a Cypress integrated circuit as specified in the applicable agreement.
+  24:.\HeartRateProcessing.c **** * Any reproduction, modification, translation, compilation, or representation of
+  25:.\HeartRateProcessing.c **** * this software except as specified above is prohibited without the express
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 2
+
+
+  26:.\HeartRateProcessing.c **** * written permission of Cypress.
+  27:.\HeartRateProcessing.c **** *
+  28:.\HeartRateProcessing.c **** * Disclaimer: CYPRESS MAKES NO WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, WITH
+  29:.\HeartRateProcessing.c **** * REGARD TO THIS MATERIAL, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+  30:.\HeartRateProcessing.c **** * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+  31:.\HeartRateProcessing.c **** * Cypress reserves the right to make changes without further notice to the
+  32:.\HeartRateProcessing.c **** * materials described herein. Cypress does not assume any liability arising out
+  33:.\HeartRateProcessing.c **** * of the application or use of any product or circuit described herein. Cypress
+  34:.\HeartRateProcessing.c **** * does not authorize its products for use as critical components in life-support
+  35:.\HeartRateProcessing.c **** * systems where a malfunction or failure may reasonably be expected to result in
+  36:.\HeartRateProcessing.c **** * significant injury to the user. The inclusion of Cypress' product in a life-
+  37:.\HeartRateProcessing.c **** * support systems application implies that the manufacturer assumes all risk of
+  38:.\HeartRateProcessing.c **** * such use and in doing so indemnifies Cypress against all charges. Use may be
+  39:.\HeartRateProcessing.c **** * limited by and subject to the applicable Cypress software license agreement.
+  40:.\HeartRateProcessing.c **** *****************************************************************************/
+  41:.\HeartRateProcessing.c **** 
+  42:.\HeartRateProcessing.c **** 
+  43:.\HeartRateProcessing.c **** /*****************************************************************************
+  44:.\HeartRateProcessing.c **** * Included headers
+  45:.\HeartRateProcessing.c **** *****************************************************************************/
+  46:.\HeartRateProcessing.c **** #include <project.h>
+  47:.\HeartRateProcessing.c **** #include <stdbool.h>
+  48:.\HeartRateProcessing.c **** #include "WatchdogTimer.h"
+  49:.\HeartRateProcessing.c **** 
+  50:.\HeartRateProcessing.c **** 
+  51:.\HeartRateProcessing.c **** /*****************************************************************************
+  52:.\HeartRateProcessing.c **** * Macros 
+  53:.\HeartRateProcessing.c **** *****************************************************************************/
+  54:.\HeartRateProcessing.c **** #define HEART_RATE_CHANNEL			        (0)
+  55:.\HeartRateProcessing.c **** #define ADC_THRESHOLD 			            (0x0)//(0x06A0)
+  56:.\HeartRateProcessing.c **** #define SEC_IN_MIN							(60)
+  57:.\HeartRateProcessing.c **** #define MS_TO_SECOND                        (1000)
+  58:.\HeartRateProcessing.c **** 
+  59:.\HeartRateProcessing.c **** 
+  60:.\HeartRateProcessing.c **** /*****************************************************************************
+  61:.\HeartRateProcessing.c **** * Public variables 
+  62:.\HeartRateProcessing.c **** *****************************************************************************/
+  63:.\HeartRateProcessing.c **** uint8 heartRate = 0;
+  64:.\HeartRateProcessing.c **** 
+  65:.\HeartRateProcessing.c **** 
+  66:.\HeartRateProcessing.c **** /*****************************************************************************
+  67:.\HeartRateProcessing.c **** * Public function definitions
+  68:.\HeartRateProcessing.c **** *****************************************************************************/
+  69:.\HeartRateProcessing.c **** 
+  70:.\HeartRateProcessing.c **** /*****************************************************************************
+  71:.\HeartRateProcessing.c **** * Function Name: ProcessHeartRateSignal
+  72:.\HeartRateProcessing.c **** ******************************************************************************
+  73:.\HeartRateProcessing.c **** * Summary:
+  74:.\HeartRateProcessing.c **** * Measures the heart rate of the user.
+  75:.\HeartRateProcessing.c **** *
+  76:.\HeartRateProcessing.c **** * Parameters:
+  77:.\HeartRateProcessing.c **** * None
+  78:.\HeartRateProcessing.c **** *
+  79:.\HeartRateProcessing.c **** * Return:
+  80:.\HeartRateProcessing.c **** * None
+  81:.\HeartRateProcessing.c **** *
+  82:.\HeartRateProcessing.c **** * Theory:
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 3
+
+
+  83:.\HeartRateProcessing.c **** * This function acts as a simple model for heart rate measurement.
+  84:.\HeartRateProcessing.c **** * The function takes the ADC sampled output and compares it to a threshold.
+  85:.\HeartRateProcessing.c **** * If the ADC output is more than the threshold then it is considered as a 
+  86:.\HeartRateProcessing.c **** * valid beat (R peak). The rising edge of this R peak is identified and the 
+  87:.\HeartRateProcessing.c **** * corresponding system timestamp is noted. The RR-interval between two 
+  88:.\HeartRateProcessing.c **** * peaks is then calculated and converted to a heart rate value in beats per
+  89:.\HeartRateProcessing.c **** * minute. The RR-interval period is calculated over a rolling window.
+  90:.\HeartRateProcessing.c **** *
+  91:.\HeartRateProcessing.c **** * Side Effects:
+  92:.\HeartRateProcessing.c **** * None
+  93:.\HeartRateProcessing.c **** *
+  94:.\HeartRateProcessing.c **** *****************************************************************************/
+  95:.\HeartRateProcessing.c **** void ProcessHeartRateSignal(void)
+  96:.\HeartRateProcessing.c **** {
+  33              		.loc 1 96 0
+  34              		.cfi_startproc
+  35 0000 80B5     		push	{r7, lr}
+  36              		.cfi_def_cfa_offset 8
+  37              		.cfi_offset 7, -8
+  38              		.cfi_offset 14, -4
+  39 0002 82B0     		sub	sp, sp, #8
+  40              		.cfi_def_cfa_offset 16
+  41 0004 00AF     		add	r7, sp, #0
+  42              		.cfi_def_cfa_register 7
+  97:.\HeartRateProcessing.c ****     static bool newBeat = true;
+  98:.\HeartRateProcessing.c ****     static bool firstTime = true;
+  99:.\HeartRateProcessing.c ****     static uint32 previousBeatTime = 0;
+ 100:.\HeartRateProcessing.c ****     static uint32 newBeatTime = 0;
+ 101:.\HeartRateProcessing.c ****     int16 adcOut;
+ 102:.\HeartRateProcessing.c ****     uint32 twoSampleTime = 0;
+  43              		.loc 1 102 0
+  44 0006 0023     		mov	r3, #0
+  45 0008 7B60     		str	r3, [r7, #4]
+ 103:.\HeartRateProcessing.c ****     
+ 104:.\HeartRateProcessing.c ****     /* Get the ADC output */
+ 105:.\HeartRateProcessing.c ****     //ADC_StartConvert();
+ 106:.\HeartRateProcessing.c ****     //ADC_IsEndConversion(ADC_WAIT_FOR_RESULT);
+ 107:.\HeartRateProcessing.c ****     adcOut = HRI_Read(); //ADC_GetResult16(HEART_RATE_CHANNEL);
+  46              		.loc 1 107 0
+  47 000a FFF7FEFF 		bl	HRI_Read
+  48 000e 031C     		mov	r3, r0
+  49 0010 1A1C     		mov	r2, r3
+  50 0012 BB1C     		add	r3, r7, #2
+  51 0014 1A80     		strh	r2, [r3]
+ 108:.\HeartRateProcessing.c ****     
+ 109:.\HeartRateProcessing.c ****     /* If the ADC output is more than a fixed threshold, consider that a 
+ 110:.\HeartRateProcessing.c ****      * valid R peak */
+ 111:.\HeartRateProcessing.c ****     if (adcOut > ADC_THRESHOLD)
+  52              		.loc 1 111 0
+  53 0016 BB1C     		add	r3, r7, #2
+  54 0018 0022     		mov	r2, #0
+  55 001a 9B5E     		ldrsh	r3, [r3, r2]
+  56 001c 002B     		cmp	r3, #0
+  57 001e 2EDD     		ble	.L2
+ 112:.\HeartRateProcessing.c ****     {
+ 113:.\HeartRateProcessing.c ****         /* Check if the R peak just started - i.e. identify the rising 
+ 114:.\HeartRateProcessing.c ****          * edge of the R peak */
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 4
+
+
+ 115:.\HeartRateProcessing.c ****         if(newBeat)
+  58              		.loc 1 115 0
+  59 0020 1A4B     		ldr	r3, .L7
+  60 0022 1B78     		ldrb	r3, [r3]
+  61 0024 002B     		cmp	r3, #0
+  62 0026 26D0     		beq	.L3
+ 116:.\HeartRateProcessing.c ****         {
+ 117:.\HeartRateProcessing.c ****             /* Check if this is the first R-peak seen by the device yet.
+ 118:.\HeartRateProcessing.c ****              * If that is the case, we cannot calculate a heart rate value 
+ 119:.\HeartRateProcessing.c ****              * yet since a minimum of two peak time interval is required. 
+ 120:.\HeartRateProcessing.c ****              * Just note the timestamp of this peak.
+ 121:.\HeartRateProcessing.c ****              */
+ 122:.\HeartRateProcessing.c ****     		if(firstTime == true)
+  63              		.loc 1 122 0
+  64 0028 194B     		ldr	r3, .L7+4
+  65 002a 1B78     		ldrb	r3, [r3]
+  66 002c 002B     		cmp	r3, #0
+  67 002e 08D0     		beq	.L4
+ 123:.\HeartRateProcessing.c ****     		{
+ 124:.\HeartRateProcessing.c ****     			firstTime = false;
+  68              		.loc 1 124 0
+  69 0030 174B     		ldr	r3, .L7+4
+  70 0032 0022     		mov	r2, #0
+  71 0034 1A70     		strb	r2, [r3]
+ 125:.\HeartRateProcessing.c ****     			previousBeatTime = WatchdogTimer_GetTimestamp();
+  72              		.loc 1 125 0
+  73 0036 FFF7FEFF 		bl	WatchdogTimer_GetTimestamp
+  74 003a 021C     		mov	r2, r0
+  75 003c 154B     		ldr	r3, .L7+8
+  76 003e 1A60     		str	r2, [r3]
+  77 0040 19E0     		b	.L3
+  78              	.L4:
+ 126:.\HeartRateProcessing.c ****     		}
+ 127:.\HeartRateProcessing.c ****     		else
+ 128:.\HeartRateProcessing.c ****     		{
+ 129:.\HeartRateProcessing.c ****                 /* Rolling window of two samples. Note the timestamp of 
+ 130:.\HeartRateProcessing.c ****                  * the new peak and subtract the timestamp of the previous
+ 131:.\HeartRateProcessing.c ****                  * to obtain the RR-interval. Extrapolate it to get a heart
+ 132:.\HeartRateProcessing.c ****                  * beat value in beats per minute.
+ 133:.\HeartRateProcessing.c ****                  */
+ 134:.\HeartRateProcessing.c ****     			newBeatTime = WatchdogTimer_GetTimestamp();
+  79              		.loc 1 134 0
+  80 0042 FFF7FEFF 		bl	WatchdogTimer_GetTimestamp
+  81 0046 021C     		mov	r2, r0
+  82 0048 134B     		ldr	r3, .L7+12
+  83 004a 1A60     		str	r2, [r3]
+ 135:.\HeartRateProcessing.c ****     			twoSampleTime = newBeatTime - previousBeatTime;
+  84              		.loc 1 135 0
+  85 004c 124B     		ldr	r3, .L7+12
+  86 004e 1A68     		ldr	r2, [r3]
+  87 0050 104B     		ldr	r3, .L7+8
+  88 0052 1B68     		ldr	r3, [r3]
+  89 0054 D31A     		sub	r3, r2, r3
+  90 0056 7B60     		str	r3, [r7, #4]
+ 136:.\HeartRateProcessing.c ****                 
+ 137:.\HeartRateProcessing.c ****                 if(twoSampleTime != 0)
+  91              		.loc 1 137 0
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 5
+
+
+  92 0058 7B68     		ldr	r3, [r7, #4]
+  93 005a 002B     		cmp	r3, #0
+  94 005c 07D0     		beq	.L5
+ 138:.\HeartRateProcessing.c ****                 {
+ 139:.\HeartRateProcessing.c ****                     heartRate = (uint32)SEC_IN_MIN * MS_TO_SECOND / twoSampleTime;
+  95              		.loc 1 139 0
+  96 005e 0F48     		ldr	r0, .L7+16
+  97 0060 7968     		ldr	r1, [r7, #4]
+  98 0062 FFF7FEFF 		bl	__aeabi_uidiv
+  99 0066 031C     		mov	r3, r0
+ 100 0068 DAB2     		uxtb	r2, r3
+ 101 006a 0D4B     		ldr	r3, .L7+20
+ 102 006c 1A70     		strb	r2, [r3]
+ 103              	.L5:
+ 140:.\HeartRateProcessing.c ****                 }
+ 141:.\HeartRateProcessing.c ****                 
+ 142:.\HeartRateProcessing.c ****                 previousBeatTime = newBeatTime;
+ 104              		.loc 1 142 0
+ 105 006e 0A4B     		ldr	r3, .L7+12
+ 106 0070 1A68     		ldr	r2, [r3]
+ 107 0072 084B     		ldr	r3, .L7+8
+ 108 0074 1A60     		str	r2, [r3]
+ 109              	.L3:
+ 143:.\HeartRateProcessing.c ****     		}
+ 144:.\HeartRateProcessing.c ****         }
+ 145:.\HeartRateProcessing.c ****         
+ 146:.\HeartRateProcessing.c ****         /* Clear the flag to indicate next time that this R peak has already
+ 147:.\HeartRateProcessing.c ****          * been accounted for and we need to wait for the next peak. 
+ 148:.\HeartRateProcessing.c ****          */
+ 149:.\HeartRateProcessing.c ****         newBeat = false;
+ 110              		.loc 1 149 0 discriminator 1
+ 111 0076 054B     		ldr	r3, .L7
+ 112 0078 0022     		mov	r2, #0
+ 113 007a 1A70     		strb	r2, [r3]
+ 114 007c 02E0     		b	.L1
+ 115              	.L2:
+ 150:.\HeartRateProcessing.c ****     }
+ 151:.\HeartRateProcessing.c ****     else
+ 152:.\HeartRateProcessing.c ****     {
+ 153:.\HeartRateProcessing.c ****         /* Set the flag to indicate that there is no R-peak going on right now.
+ 154:.\HeartRateProcessing.c ****          * So it is expected that the next time the ADC output is more than 
+ 155:.\HeartRateProcessing.c ****          * the threshold, it will be a new peak. 
+ 156:.\HeartRateProcessing.c ****          */
+ 157:.\HeartRateProcessing.c ****         newBeat = true;
+ 116              		.loc 1 157 0
+ 117 007e 034B     		ldr	r3, .L7
+ 118 0080 0122     		mov	r2, #1
+ 119 0082 1A70     		strb	r2, [r3]
+ 120              	.L1:
+ 158:.\HeartRateProcessing.c ****     }
+ 159:.\HeartRateProcessing.c ****     
+ 160:.\HeartRateProcessing.c **** }
+ 121              		.loc 1 160 0
+ 122 0084 BD46     		mov	sp, r7
+ 123 0086 02B0     		add	sp, sp, #8
+ 124              		@ sp needed
+ 125 0088 80BD     		pop	{r7, pc}
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 6
+
+
+ 126              	.L8:
+ 127 008a C046     		.align	2
+ 128              	.L7:
+ 129 008c 00000000 		.word	newBeat.6578
+ 130 0090 01000000 		.word	firstTime.6579
+ 131 0094 04000000 		.word	previousBeatTime.6580
+ 132 0098 08000000 		.word	newBeatTime.6581
+ 133 009c 60EA0000 		.word	60000
+ 134 00a0 00000000 		.word	heartRate
+ 135              		.cfi_endproc
+ 136              	.LFE35:
+ 137              		.size	ProcessHeartRateSignal, .-ProcessHeartRateSignal
+ 138              		.data
+ 139              		.type	newBeat.6578, %object
+ 140              		.size	newBeat.6578, 1
+ 141              	newBeat.6578:
+ 142 0000 01       		.byte	1
+ 143              		.type	firstTime.6579, %object
+ 144              		.size	firstTime.6579, 1
+ 145              	firstTime.6579:
+ 146 0001 01       		.byte	1
+ 147              		.bss
+ 148 0001 000000   		.align	2
+ 149              	previousBeatTime.6580:
+ 150 0004 00000000 		.space	4
+ 151              		.align	2
+ 152              	newBeatTime.6581:
+ 153 0008 00000000 		.space	4
+ 154              		.text
+ 155              	.Letext0:
+ 156              		.file 2 ".\\Generated_Source\\PSoC4/cytypes.h"
+ 157              		.file 3 ".\\Generated_Source\\PSoC4/BLE_1_Stack.h"
+ 158              		.file 4 ".\\Generated_Source\\PSoC4/BLE_1_hrs.h"
+ 159              		.file 5 ".\\Generated_Source\\PSoC4/BLE_1_dis.h"
+ 160              		.section	.debug_info,"",%progbits
+ 161              	.Ldebug_info0:
+ 162 0000 09030000 		.4byte	0x309
+ 163 0004 0400     		.2byte	0x4
+ 164 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 165 000a 04       		.byte	0x4
+ 166 000b 01       		.uleb128 0x1
+ 167 000c BE080000 		.4byte	.LASF91
+ 168 0010 01       		.byte	0x1
+ 169 0011 0F050000 		.4byte	.LASF92
+ 170 0015 6D070000 		.4byte	.LASF93
+ 171 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 172 001d 00000000 		.4byte	0
+ 173 0021 00000000 		.4byte	.Ldebug_line0
+ 174 0025 02       		.uleb128 0x2
+ 175 0026 01       		.byte	0x1
+ 176 0027 06       		.byte	0x6
+ 177 0028 17040000 		.4byte	.LASF0
+ 178 002c 02       		.uleb128 0x2
+ 179 002d 01       		.byte	0x1
+ 180 002e 08       		.byte	0x8
+ 181 002f D4030000 		.4byte	.LASF1
+ 182 0033 02       		.uleb128 0x2
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 7
+
+
+ 183 0034 02       		.byte	0x2
+ 184 0035 05       		.byte	0x5
+ 185 0036 3B000000 		.4byte	.LASF2
+ 186 003a 02       		.uleb128 0x2
+ 187 003b 02       		.byte	0x2
+ 188 003c 07       		.byte	0x7
+ 189 003d 82050000 		.4byte	.LASF3
+ 190 0041 02       		.uleb128 0x2
+ 191 0042 04       		.byte	0x4
+ 192 0043 05       		.byte	0x5
+ 193 0044 91020000 		.4byte	.LASF4
+ 194 0048 02       		.uleb128 0x2
+ 195 0049 04       		.byte	0x4
+ 196 004a 07       		.byte	0x7
+ 197 004b A8040000 		.4byte	.LASF5
+ 198 004f 02       		.uleb128 0x2
+ 199 0050 08       		.byte	0x8
+ 200 0051 05       		.byte	0x5
+ 201 0052 6C020000 		.4byte	.LASF6
+ 202 0056 02       		.uleb128 0x2
+ 203 0057 08       		.byte	0x8
+ 204 0058 07       		.byte	0x7
+ 205 0059 7A020000 		.4byte	.LASF7
+ 206 005d 03       		.uleb128 0x3
+ 207 005e 04       		.byte	0x4
+ 208 005f 05       		.byte	0x5
+ 209 0060 696E7400 		.ascii	"int\000"
+ 210 0064 02       		.uleb128 0x2
+ 211 0065 04       		.byte	0x4
+ 212 0066 07       		.byte	0x7
+ 213 0067 80040000 		.4byte	.LASF8
+ 214 006b 04       		.uleb128 0x4
+ 215 006c 9C030000 		.4byte	.LASF9
+ 216 0070 02       		.byte	0x2
+ 217 0071 A1       		.byte	0xa1
+ 218 0072 2C000000 		.4byte	0x2c
+ 219 0076 04       		.uleb128 0x4
+ 220 0077 F0050000 		.4byte	.LASF10
+ 221 007b 02       		.byte	0x2
+ 222 007c A3       		.byte	0xa3
+ 223 007d 48000000 		.4byte	0x48
+ 224 0081 04       		.uleb128 0x4
+ 225 0082 73010000 		.4byte	.LASF11
+ 226 0086 02       		.byte	0x2
+ 227 0087 A5       		.byte	0xa5
+ 228 0088 33000000 		.4byte	0x33
+ 229 008c 02       		.uleb128 0x2
+ 230 008d 04       		.byte	0x4
+ 231 008e 04       		.byte	0x4
+ 232 008f 33020000 		.4byte	.LASF12
+ 233 0093 02       		.uleb128 0x2
+ 234 0094 08       		.byte	0x8
+ 235 0095 04       		.byte	0x4
+ 236 0096 38060000 		.4byte	.LASF13
+ 237 009a 02       		.uleb128 0x2
+ 238 009b 01       		.byte	0x1
+ 239 009c 08       		.byte	0x8
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 8
+
+
+ 240 009d 61050000 		.4byte	.LASF14
+ 241 00a1 02       		.uleb128 0x2
+ 242 00a2 04       		.byte	0x4
+ 243 00a3 07       		.byte	0x7
+ 244 00a4 7D000000 		.4byte	.LASF15
+ 245 00a8 05       		.uleb128 0x5
+ 246 00a9 01       		.byte	0x1
+ 247 00aa 03       		.byte	0x3
+ 248 00ab 58       		.byte	0x58
+ 249 00ac 18020000 		.4byte	0x218
+ 250 00b0 06       		.uleb128 0x6
+ 251 00b1 DD010000 		.4byte	.LASF16
+ 252 00b5 00       		.sleb128 0
+ 253 00b6 06       		.uleb128 0x6
+ 254 00b7 38010000 		.4byte	.LASF17
+ 255 00bb 01       		.sleb128 1
+ 256 00bc 06       		.uleb128 0x6
+ 257 00bd D5070000 		.4byte	.LASF18
+ 258 00c1 02       		.sleb128 2
+ 259 00c2 06       		.uleb128 0x6
+ 260 00c3 AD060000 		.4byte	.LASF19
+ 261 00c7 03       		.sleb128 3
+ 262 00c8 06       		.uleb128 0x6
+ 263 00c9 02010000 		.4byte	.LASF20
+ 264 00cd 04       		.sleb128 4
+ 265 00ce 06       		.uleb128 0x6
+ 266 00cf 09030000 		.4byte	.LASF21
+ 267 00d3 05       		.sleb128 5
+ 268 00d4 06       		.uleb128 0x6
+ 269 00d5 0B070000 		.4byte	.LASF22
+ 270 00d9 20       		.sleb128 32
+ 271 00da 06       		.uleb128 0x6
+ 272 00db BA040000 		.4byte	.LASF23
+ 273 00df 21       		.sleb128 33
+ 274 00e0 06       		.uleb128 0x6
+ 275 00e1 00000000 		.4byte	.LASF24
+ 276 00e5 22       		.sleb128 34
+ 277 00e6 06       		.uleb128 0x6
+ 278 00e7 3C030000 		.4byte	.LASF25
+ 279 00eb 23       		.sleb128 35
+ 280 00ec 06       		.uleb128 0x6
+ 281 00ed 64040000 		.4byte	.LASF26
+ 282 00f1 24       		.sleb128 36
+ 283 00f2 06       		.uleb128 0x6
+ 284 00f3 45000000 		.4byte	.LASF27
+ 285 00f7 25       		.sleb128 37
+ 286 00f8 06       		.uleb128 0x6
+ 287 00f9 85060000 		.4byte	.LASF28
+ 288 00fd 26       		.sleb128 38
+ 289 00fe 06       		.uleb128 0x6
+ 290 00ff BB020000 		.4byte	.LASF29
+ 291 0103 27       		.sleb128 39
+ 292 0104 06       		.uleb128 0x6
+ 293 0105 78080000 		.4byte	.LASF30
+ 294 0109 28       		.sleb128 40
+ 295 010a 06       		.uleb128 0x6
+ 296 010b F2040000 		.4byte	.LASF31
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 9
+
+
+ 297 010f 29       		.sleb128 41
+ 298 0110 06       		.uleb128 0x6
+ 299 0111 27050000 		.4byte	.LASF32
+ 300 0115 2A       		.sleb128 42
+ 301 0116 06       		.uleb128 0x6
+ 302 0117 0B080000 		.4byte	.LASF33
+ 303 011b 2B       		.sleb128 43
+ 304 011c 06       		.uleb128 0x6
+ 305 011d 79010000 		.4byte	.LASF34
+ 306 0121 2C       		.sleb128 44
+ 307 0122 06       		.uleb128 0x6
+ 308 0123 B3000000 		.4byte	.LASF35
+ 309 0127 C000     		.sleb128 64
+ 310 0129 06       		.uleb128 0x6
+ 311 012a 8D040000 		.4byte	.LASF36
+ 312 012e C100     		.sleb128 65
+ 313 0130 06       		.uleb128 0x6
+ 314 0131 5F000000 		.4byte	.LASF37
+ 315 0135 C200     		.sleb128 66
+ 316 0137 06       		.uleb128 0x6
+ 317 0138 4B010000 		.4byte	.LASF38
+ 318 013c C300     		.sleb128 67
+ 319 013e 06       		.uleb128 0x6
+ 320 013f A0070000 		.4byte	.LASF39
+ 321 0143 C400     		.sleb128 68
+ 322 0145 06       		.uleb128 0x6
+ 323 0146 2F070000 		.4byte	.LASF40
+ 324 014a C500     		.sleb128 69
+ 325 014c 06       		.uleb128 0x6
+ 326 014d 17010000 		.4byte	.LASF41
+ 327 0151 C600     		.sleb128 70
+ 328 0153 06       		.uleb128 0x6
+ 329 0154 31080000 		.4byte	.LASF42
+ 330 0158 C700     		.sleb128 71
+ 331 015a 06       		.uleb128 0x6
+ 332 015b 3D040000 		.4byte	.LASF43
+ 333 015f C800     		.sleb128 72
+ 334 0161 06       		.uleb128 0x6
+ 335 0162 39020000 		.4byte	.LASF44
+ 336 0166 C900     		.sleb128 73
+ 337 0168 06       		.uleb128 0x6
+ 338 0169 B3050000 		.4byte	.LASF45
+ 339 016d CA00     		.sleb128 74
+ 340 016f 06       		.uleb128 0x6
+ 341 0170 9D010000 		.4byte	.LASF46
+ 342 0174 CB00     		.sleb128 75
+ 343 0176 06       		.uleb128 0x6
+ 344 0177 23040000 		.4byte	.LASF47
+ 345 017b CC00     		.sleb128 76
+ 346 017d 06       		.uleb128 0x6
+ 347 017e 52020000 		.4byte	.LASF48
+ 348 0182 CD00     		.sleb128 77
+ 349 0184 06       		.uleb128 0x6
+ 350 0185 E4000000 		.4byte	.LASF49
+ 351 0189 CE00     		.sleb128 78
+ 352 018b 06       		.uleb128 0x6
+ 353 018c E2030000 		.4byte	.LASF50
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 10
+
+
+ 354 0190 CF00     		.sleb128 79
+ 355 0192 06       		.uleb128 0x6
+ 356 0193 59080000 		.4byte	.LASF51
+ 357 0197 D000     		.sleb128 80
+ 358 0199 06       		.uleb128 0x6
+ 359 019a D1050000 		.4byte	.LASF52
+ 360 019e D100     		.sleb128 81
+ 361 01a0 06       		.uleb128 0x6
+ 362 01a1 E8020000 		.4byte	.LASF53
+ 363 01a5 D200     		.sleb128 82
+ 364 01a7 06       		.uleb128 0x6
+ 365 01a8 9A020000 		.4byte	.LASF54
+ 366 01ac D300     		.sleb128 83
+ 367 01ae 06       		.uleb128 0x6
+ 368 01af BC010000 		.4byte	.LASF55
+ 369 01b3 D400     		.sleb128 84
+ 370 01b5 06       		.uleb128 0x6
+ 371 01b6 9A080000 		.4byte	.LASF56
+ 372 01ba D500     		.sleb128 85
+ 373 01bc 06       		.uleb128 0x6
+ 374 01bd AE030000 		.4byte	.LASF57
+ 375 01c1 F000     		.sleb128 112
+ 376 01c3 06       		.uleb128 0x6
+ 377 01c4 E5060000 		.4byte	.LASF58
+ 378 01c8 F100     		.sleb128 113
+ 379 01ca 06       		.uleb128 0x6
+ 380 01cb 66050000 		.4byte	.LASF59
+ 381 01cf F200     		.sleb128 114
+ 382 01d1 06       		.uleb128 0x6
+ 383 01d2 F4010000 		.4byte	.LASF60
+ 384 01d6 F300     		.sleb128 115
+ 385 01d8 06       		.uleb128 0x6
+ 386 01d9 70030000 		.4byte	.LASF61
+ 387 01dd F400     		.sleb128 116
+ 388 01df 06       		.uleb128 0x6
+ 389 01e0 D1040000 		.4byte	.LASF62
+ 390 01e4 F500     		.sleb128 117
+ 391 01e6 06       		.uleb128 0x6
+ 392 01e7 12020000 		.4byte	.LASF63
+ 393 01eb F600     		.sleb128 118
+ 394 01ed 06       		.uleb128 0x6
+ 395 01ee C6060000 		.4byte	.LASF64
+ 396 01f2 F700     		.sleb128 119
+ 397 01f4 06       		.uleb128 0x6
+ 398 01f5 15060000 		.4byte	.LASF65
+ 399 01f9 F800     		.sleb128 120
+ 400 01fb 06       		.uleb128 0x6
+ 401 01fc 4D060000 		.4byte	.LASF66
+ 402 0200 F900     		.sleb128 121
+ 403 0202 06       		.uleb128 0x6
+ 404 0203 E7070000 		.4byte	.LASF67
+ 405 0207 FA00     		.sleb128 122
+ 406 0209 06       		.uleb128 0x6
+ 407 020a F7050000 		.4byte	.LASF68
+ 408 020e FA01     		.sleb128 250
+ 409 0210 06       		.uleb128 0x6
+ 410 0211 8E030000 		.4byte	.LASF69
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 11
+
+
+ 411 0215 FF01     		.sleb128 255
+ 412 0217 00       		.byte	0
+ 413 0218 05       		.uleb128 0x5
+ 414 0219 01       		.byte	0x1
+ 415 021a 04       		.byte	0x4
+ 416 021b 22       		.byte	0x22
+ 417 021c 39020000 		.4byte	0x239
+ 418 0220 06       		.uleb128 0x6
+ 419 0221 62030000 		.4byte	.LASF70
+ 420 0225 00       		.sleb128 0
+ 421 0226 06       		.uleb128 0x6
+ 422 0227 DA020000 		.4byte	.LASF71
+ 423 022b 01       		.sleb128 1
+ 424 022c 06       		.uleb128 0x6
+ 425 022d 09040000 		.4byte	.LASF72
+ 426 0231 02       		.sleb128 2
+ 427 0232 06       		.uleb128 0x6
+ 428 0233 86000000 		.4byte	.LASF73
+ 429 0237 03       		.sleb128 3
+ 430 0238 00       		.byte	0
+ 431 0239 05       		.uleb128 0x5
+ 432 023a 01       		.byte	0x1
+ 433 023b 05       		.byte	0x5
+ 434 023c 1D       		.byte	0x1d
+ 435 023d 7E020000 		.4byte	0x27e
+ 436 0241 06       		.uleb128 0x6
+ 437 0242 4E090000 		.4byte	.LASF74
+ 438 0246 00       		.sleb128 0
+ 439 0247 06       		.uleb128 0x6
+ 440 0248 25030000 		.4byte	.LASF75
+ 441 024c 01       		.sleb128 1
+ 442 024d 06       		.uleb128 0x6
+ 443 024e 9B000000 		.4byte	.LASF76
+ 444 0252 02       		.sleb128 2
+ 445 0253 06       		.uleb128 0x6
+ 446 0254 BE070000 		.4byte	.LASF77
+ 447 0258 03       		.sleb128 3
+ 448 0259 06       		.uleb128 0x6
+ 449 025a 56070000 		.4byte	.LASF78
+ 450 025e 04       		.sleb128 4
+ 451 025f 06       		.uleb128 0x6
+ 452 0260 CD000000 		.4byte	.LASF79
+ 453 0264 05       		.sleb128 5
+ 454 0265 06       		.uleb128 0x6
+ 455 0266 3A090000 		.4byte	.LASF80
+ 456 026a 06       		.sleb128 6
+ 457 026b 06       		.uleb128 0x6
+ 458 026c 9B050000 		.4byte	.LASF81
+ 459 0270 07       		.sleb128 7
+ 460 0271 06       		.uleb128 0x6
+ 461 0272 6A090000 		.4byte	.LASF82
+ 462 0276 08       		.sleb128 8
+ 463 0277 06       		.uleb128 0x6
+ 464 0278 70060000 		.4byte	.LASF83
+ 465 027c 09       		.sleb128 9
+ 466 027d 00       		.byte	0
+ 467 027e 07       		.uleb128 0x7
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 12
+
+
+ 468 027f 24000000 		.4byte	.LASF94
+ 469 0283 01       		.byte	0x1
+ 470 0284 5F       		.byte	0x5f
+ 471 0285 00000000 		.4byte	.LFB35
+ 472 0289 A4000000 		.4byte	.LFE35-.LFB35
+ 473 028d 01       		.uleb128 0x1
+ 474 028e 9C       		.byte	0x9c
+ 475 028f F4020000 		.4byte	0x2f4
+ 476 0293 08       		.uleb128 0x8
+ 477 0294 01040000 		.4byte	.LASF84
+ 478 0298 01       		.byte	0x1
+ 479 0299 61       		.byte	0x61
+ 480 029a F4020000 		.4byte	0x2f4
+ 481 029e 05       		.uleb128 0x5
+ 482 029f 03       		.byte	0x3
+ 483 02a0 00000000 		.4byte	newBeat.6578
+ 484 02a4 08       		.uleb128 0x8
+ 485 02a5 69010000 		.4byte	.LASF85
+ 486 02a9 01       		.byte	0x1
+ 487 02aa 62       		.byte	0x62
+ 488 02ab F4020000 		.4byte	0x2f4
+ 489 02af 05       		.uleb128 0x5
+ 490 02b0 03       		.byte	0x3
+ 491 02b1 01000000 		.4byte	firstTime.6579
+ 492 02b5 08       		.uleb128 0x8
+ 493 02b6 50050000 		.4byte	.LASF86
+ 494 02ba 01       		.byte	0x1
+ 495 02bb 63       		.byte	0x63
+ 496 02bc 76000000 		.4byte	0x76
+ 497 02c0 05       		.uleb128 0x5
+ 498 02c1 03       		.byte	0x3
+ 499 02c2 04000000 		.4byte	previousBeatTime.6580
+ 500 02c6 08       		.uleb128 0x8
+ 501 02c7 A2030000 		.4byte	.LASF87
+ 502 02cb 01       		.byte	0x1
+ 503 02cc 64       		.byte	0x64
+ 504 02cd 76000000 		.4byte	0x76
+ 505 02d1 05       		.uleb128 0x5
+ 506 02d2 03       		.byte	0x3
+ 507 02d3 08000000 		.4byte	newBeatTime.6581
+ 508 02d7 08       		.uleb128 0x8
+ 509 02d8 2A080000 		.4byte	.LASF88
+ 510 02dc 01       		.byte	0x1
+ 511 02dd 65       		.byte	0x65
+ 512 02de 81000000 		.4byte	0x81
+ 513 02e2 02       		.uleb128 0x2
+ 514 02e3 91       		.byte	0x91
+ 515 02e4 72       		.sleb128 -14
+ 516 02e5 08       		.uleb128 0x8
+ 517 02e6 3F060000 		.4byte	.LASF89
+ 518 02ea 01       		.byte	0x1
+ 519 02eb 66       		.byte	0x66
+ 520 02ec 76000000 		.4byte	0x76
+ 521 02f0 02       		.uleb128 0x2
+ 522 02f1 91       		.byte	0x91
+ 523 02f2 74       		.sleb128 -12
+ 524 02f3 00       		.byte	0
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 13
+
+
+ 525 02f4 02       		.uleb128 0x2
+ 526 02f5 01       		.byte	0x1
+ 527 02f6 02       		.byte	0x2
+ 528 02f7 95050000 		.4byte	.LASF90
+ 529 02fb 09       		.uleb128 0x9
+ 530 02fc 4F080000 		.4byte	.LASF95
+ 531 0300 01       		.byte	0x1
+ 532 0301 3F       		.byte	0x3f
+ 533 0302 6B000000 		.4byte	0x6b
+ 534 0306 05       		.uleb128 0x5
+ 535 0307 03       		.byte	0x3
+ 536 0308 00000000 		.4byte	heartRate
+ 537 030c 00       		.byte	0
+ 538              		.section	.debug_abbrev,"",%progbits
+ 539              	.Ldebug_abbrev0:
+ 540 0000 01       		.uleb128 0x1
+ 541 0001 11       		.uleb128 0x11
+ 542 0002 01       		.byte	0x1
+ 543 0003 25       		.uleb128 0x25
+ 544 0004 0E       		.uleb128 0xe
+ 545 0005 13       		.uleb128 0x13
+ 546 0006 0B       		.uleb128 0xb
+ 547 0007 03       		.uleb128 0x3
+ 548 0008 0E       		.uleb128 0xe
+ 549 0009 1B       		.uleb128 0x1b
+ 550 000a 0E       		.uleb128 0xe
+ 551 000b 55       		.uleb128 0x55
+ 552 000c 17       		.uleb128 0x17
+ 553 000d 11       		.uleb128 0x11
+ 554 000e 01       		.uleb128 0x1
+ 555 000f 10       		.uleb128 0x10
+ 556 0010 17       		.uleb128 0x17
+ 557 0011 00       		.byte	0
+ 558 0012 00       		.byte	0
+ 559 0013 02       		.uleb128 0x2
+ 560 0014 24       		.uleb128 0x24
+ 561 0015 00       		.byte	0
+ 562 0016 0B       		.uleb128 0xb
+ 563 0017 0B       		.uleb128 0xb
+ 564 0018 3E       		.uleb128 0x3e
+ 565 0019 0B       		.uleb128 0xb
+ 566 001a 03       		.uleb128 0x3
+ 567 001b 0E       		.uleb128 0xe
+ 568 001c 00       		.byte	0
+ 569 001d 00       		.byte	0
+ 570 001e 03       		.uleb128 0x3
+ 571 001f 24       		.uleb128 0x24
+ 572 0020 00       		.byte	0
+ 573 0021 0B       		.uleb128 0xb
+ 574 0022 0B       		.uleb128 0xb
+ 575 0023 3E       		.uleb128 0x3e
+ 576 0024 0B       		.uleb128 0xb
+ 577 0025 03       		.uleb128 0x3
+ 578 0026 08       		.uleb128 0x8
+ 579 0027 00       		.byte	0
+ 580 0028 00       		.byte	0
+ 581 0029 04       		.uleb128 0x4
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 14
+
+
+ 582 002a 16       		.uleb128 0x16
+ 583 002b 00       		.byte	0
+ 584 002c 03       		.uleb128 0x3
+ 585 002d 0E       		.uleb128 0xe
+ 586 002e 3A       		.uleb128 0x3a
+ 587 002f 0B       		.uleb128 0xb
+ 588 0030 3B       		.uleb128 0x3b
+ 589 0031 0B       		.uleb128 0xb
+ 590 0032 49       		.uleb128 0x49
+ 591 0033 13       		.uleb128 0x13
+ 592 0034 00       		.byte	0
+ 593 0035 00       		.byte	0
+ 594 0036 05       		.uleb128 0x5
+ 595 0037 04       		.uleb128 0x4
+ 596 0038 01       		.byte	0x1
+ 597 0039 0B       		.uleb128 0xb
+ 598 003a 0B       		.uleb128 0xb
+ 599 003b 3A       		.uleb128 0x3a
+ 600 003c 0B       		.uleb128 0xb
+ 601 003d 3B       		.uleb128 0x3b
+ 602 003e 0B       		.uleb128 0xb
+ 603 003f 01       		.uleb128 0x1
+ 604 0040 13       		.uleb128 0x13
+ 605 0041 00       		.byte	0
+ 606 0042 00       		.byte	0
+ 607 0043 06       		.uleb128 0x6
+ 608 0044 28       		.uleb128 0x28
+ 609 0045 00       		.byte	0
+ 610 0046 03       		.uleb128 0x3
+ 611 0047 0E       		.uleb128 0xe
+ 612 0048 1C       		.uleb128 0x1c
+ 613 0049 0D       		.uleb128 0xd
+ 614 004a 00       		.byte	0
+ 615 004b 00       		.byte	0
+ 616 004c 07       		.uleb128 0x7
+ 617 004d 2E       		.uleb128 0x2e
+ 618 004e 01       		.byte	0x1
+ 619 004f 3F       		.uleb128 0x3f
+ 620 0050 19       		.uleb128 0x19
+ 621 0051 03       		.uleb128 0x3
+ 622 0052 0E       		.uleb128 0xe
+ 623 0053 3A       		.uleb128 0x3a
+ 624 0054 0B       		.uleb128 0xb
+ 625 0055 3B       		.uleb128 0x3b
+ 626 0056 0B       		.uleb128 0xb
+ 627 0057 27       		.uleb128 0x27
+ 628 0058 19       		.uleb128 0x19
+ 629 0059 11       		.uleb128 0x11
+ 630 005a 01       		.uleb128 0x1
+ 631 005b 12       		.uleb128 0x12
+ 632 005c 06       		.uleb128 0x6
+ 633 005d 40       		.uleb128 0x40
+ 634 005e 18       		.uleb128 0x18
+ 635 005f 9642     		.uleb128 0x2116
+ 636 0061 19       		.uleb128 0x19
+ 637 0062 01       		.uleb128 0x1
+ 638 0063 13       		.uleb128 0x13
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 15
+
+
+ 639 0064 00       		.byte	0
+ 640 0065 00       		.byte	0
+ 641 0066 08       		.uleb128 0x8
+ 642 0067 34       		.uleb128 0x34
+ 643 0068 00       		.byte	0
+ 644 0069 03       		.uleb128 0x3
+ 645 006a 0E       		.uleb128 0xe
+ 646 006b 3A       		.uleb128 0x3a
+ 647 006c 0B       		.uleb128 0xb
+ 648 006d 3B       		.uleb128 0x3b
+ 649 006e 0B       		.uleb128 0xb
+ 650 006f 49       		.uleb128 0x49
+ 651 0070 13       		.uleb128 0x13
+ 652 0071 02       		.uleb128 0x2
+ 653 0072 18       		.uleb128 0x18
+ 654 0073 00       		.byte	0
+ 655 0074 00       		.byte	0
+ 656 0075 09       		.uleb128 0x9
+ 657 0076 34       		.uleb128 0x34
+ 658 0077 00       		.byte	0
+ 659 0078 03       		.uleb128 0x3
+ 660 0079 0E       		.uleb128 0xe
+ 661 007a 3A       		.uleb128 0x3a
+ 662 007b 0B       		.uleb128 0xb
+ 663 007c 3B       		.uleb128 0x3b
+ 664 007d 0B       		.uleb128 0xb
+ 665 007e 49       		.uleb128 0x49
+ 666 007f 13       		.uleb128 0x13
+ 667 0080 3F       		.uleb128 0x3f
+ 668 0081 19       		.uleb128 0x19
+ 669 0082 02       		.uleb128 0x2
+ 670 0083 18       		.uleb128 0x18
+ 671 0084 00       		.byte	0
+ 672 0085 00       		.byte	0
+ 673 0086 00       		.byte	0
+ 674              		.section	.debug_aranges,"",%progbits
+ 675 0000 1C000000 		.4byte	0x1c
+ 676 0004 0200     		.2byte	0x2
+ 677 0006 00000000 		.4byte	.Ldebug_info0
+ 678 000a 04       		.byte	0x4
+ 679 000b 00       		.byte	0
+ 680 000c 0000     		.2byte	0
+ 681 000e 0000     		.2byte	0
+ 682 0010 00000000 		.4byte	.LFB35
+ 683 0014 A4000000 		.4byte	.LFE35-.LFB35
+ 684 0018 00000000 		.4byte	0
+ 685 001c 00000000 		.4byte	0
+ 686              		.section	.debug_ranges,"",%progbits
+ 687              	.Ldebug_ranges0:
+ 688 0000 00000000 		.4byte	.LFB35
+ 689 0004 A4000000 		.4byte	.LFE35
+ 690 0008 00000000 		.4byte	0
+ 691 000c 00000000 		.4byte	0
+ 692              		.section	.debug_line,"",%progbits
+ 693              	.Ldebug_line0:
+ 694 0000 AE000000 		.section	.debug_str,"MS",%progbits,1
+ 694      02008300 
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 16
+
+
+ 694      00000201 
+ 694      FB0E0D00 
+ 694      01010101 
+ 695              	.LASF24:
+ 696 0000 4359424C 		.ascii	"CYBLE_EVT_GAP_PASSKEY_ENTRY_REQUEST\000"
+ 696      455F4556 
+ 696      545F4741 
+ 696      505F5041 
+ 696      53534B45 
+ 697              	.LASF94:
+ 698 0024 50726F63 		.ascii	"ProcessHeartRateSignal\000"
+ 698      65737348 
+ 698      65617274 
+ 698      52617465 
+ 698      5369676E 
+ 699              	.LASF2:
+ 700 003b 73686F72 		.ascii	"short int\000"
+ 700      7420696E 
+ 700      7400
+ 701              	.LASF27:
+ 702 0045 4359424C 		.ascii	"CYBLE_EVT_GAP_AUTH_FAILED\000"
+ 702      455F4556 
+ 702      545F4741 
+ 702      505F4155 
+ 702      54485F46 
+ 703              	.LASF37:
+ 704 005f 4359424C 		.ascii	"CYBLE_EVT_GATT_DISCONNECT_IND\000"
+ 704      455F4556 
+ 704      545F4741 
+ 704      54545F44 
+ 704      4953434F 
+ 705              	.LASF15:
+ 706 007d 73697A65 		.ascii	"sizetype\000"
+ 706      74797065 
+ 706      00
+ 707              	.LASF73:
+ 708 0086 4359424C 		.ascii	"CYBLE_HRS_CHAR_COUNT\000"
+ 708      455F4852 
+ 708      535F4348 
+ 708      41525F43 
+ 708      4F554E54 
+ 709              	.LASF76:
+ 710 009b 4359424C 		.ascii	"CYBLE_DIS_SERIAL_NUMBER\000"
+ 710      455F4449 
+ 710      535F5345 
+ 710      5249414C 
+ 710      5F4E554D 
+ 711              	.LASF35:
+ 712 00b3 4359424C 		.ascii	"CYBLE_EVT_GATTC_ERROR_RSP\000"
+ 712      455F4556 
+ 712      545F4741 
+ 712      5454435F 
+ 712      4552524F 
+ 713              	.LASF79:
+ 714 00cd 4359424C 		.ascii	"CYBLE_DIS_SOFTWARE_REV\000"
+ 714      455F4449 
+ 714      535F534F 
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 17
+
+
+ 714      46545741 
+ 714      52455F52 
+ 715              	.LASF49:
+ 716 00e4 4359424C 		.ascii	"CYBLE_EVT_GATTS_WRITE_CMD_REQ\000"
+ 716      455F4556 
+ 716      545F4741 
+ 716      5454535F 
+ 716      57524954 
+ 717              	.LASF20:
+ 718 0102 4359424C 		.ascii	"CYBLE_EVT_HCI_STATUS\000"
+ 718      455F4556 
+ 718      545F4843 
+ 718      495F5354 
+ 718      41545553 
+ 719              	.LASF41:
+ 720 0117 4359424C 		.ascii	"CYBLE_EVT_GATTC_READ_BY_TYPE_RSP\000"
+ 720      455F4556 
+ 720      545F4741 
+ 720      5454435F 
+ 720      52454144 
+ 721              	.LASF17:
+ 722 0138 4359424C 		.ascii	"CYBLE_EVT_STACK_ON\000"
+ 722      455F4556 
+ 722      545F5354 
+ 722      41434B5F 
+ 722      4F4E00
+ 723              	.LASF38:
+ 724 014b 4359424C 		.ascii	"CYBLE_EVT_GATTS_XCNHG_MTU_REQ\000"
+ 724      455F4556 
+ 724      545F4741 
+ 724      5454535F 
+ 724      58434E48 
+ 725              	.LASF85:
+ 726 0169 66697273 		.ascii	"firstTime\000"
+ 726      7454696D 
+ 726      6500
+ 727              	.LASF11:
+ 728 0173 696E7431 		.ascii	"int16\000"
+ 728      3600
+ 729              	.LASF34:
+ 730 0179 4359424C 		.ascii	"CYBLE_EVT_GAP_KEYINFO_EXCHNGE_CMPLT\000"
+ 730      455F4556 
+ 730      545F4741 
+ 730      505F4B45 
+ 730      59494E46 
+ 731              	.LASF46:
+ 732 019d 4359424C 		.ascii	"CYBLE_EVT_GATTC_READ_MULTI_RSP\000"
+ 732      455F4556 
+ 732      545F4741 
+ 732      5454435F 
+ 732      52454144 
+ 733              	.LASF55:
+ 734 01bc 4359424C 		.ascii	"CYBLE_EVT_GATTS_HANDLE_VALUE_CNF\000"
+ 734      455F4556 
+ 734      545F4741 
+ 734      5454535F 
+ 734      48414E44 
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 18
+
+
+ 735              	.LASF16:
+ 736 01dd 4359424C 		.ascii	"CYBLE_EVT_HOST_INVALID\000"
+ 736      455F4556 
+ 736      545F484F 
+ 736      53545F49 
+ 736      4E56414C 
+ 737              	.LASF60:
+ 738 01f4 4359424C 		.ascii	"CYBLE_EVT_L2CAP_CBFC_CONN_IND\000"
+ 738      455F4556 
+ 738      545F4C32 
+ 738      4341505F 
+ 738      43424643 
+ 739              	.LASF63:
+ 740 0212 4359424C 		.ascii	"CYBLE_EVT_L2CAP_CBFC_DISCONN_CNF\000"
+ 740      455F4556 
+ 740      545F4C32 
+ 740      4341505F 
+ 740      43424643 
+ 741              	.LASF12:
+ 742 0233 666C6F61 		.ascii	"float\000"
+ 742      7400
+ 743              	.LASF44:
+ 744 0239 4359424C 		.ascii	"CYBLE_EVT_GATTC_READ_RSP\000"
+ 744      455F4556 
+ 744      545F4741 
+ 744      5454435F 
+ 744      52454144 
+ 745              	.LASF48:
+ 746 0252 4359424C 		.ascii	"CYBLE_EVT_GATTC_WRITE_RSP\000"
+ 746      455F4556 
+ 746      545F4741 
+ 746      5454435F 
+ 746      57524954 
+ 747              	.LASF6:
+ 748 026c 6C6F6E67 		.ascii	"long long int\000"
+ 748      206C6F6E 
+ 748      6720696E 
+ 748      7400
+ 749              	.LASF7:
+ 750 027a 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 750      206C6F6E 
+ 750      6720756E 
+ 750      7369676E 
+ 750      65642069 
+ 751              	.LASF4:
+ 752 0291 6C6F6E67 		.ascii	"long int\000"
+ 752      20696E74 
+ 752      00
+ 753              	.LASF54:
+ 754 029a 4359424C 		.ascii	"CYBLE_EVT_GATTC_HANDLE_VALUE_IND\000"
+ 754      455F4556 
+ 754      545F4741 
+ 754      5454435F 
+ 754      48414E44 
+ 755              	.LASF29:
+ 756 02bb 4359424C 		.ascii	"CYBLE_EVT_GAP_DEVICE_CONNECTED\000"
+ 756      455F4556 
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 19
+
+
+ 756      545F4741 
+ 756      505F4445 
+ 756      56494345 
+ 757              	.LASF71:
+ 758 02da 4359424C 		.ascii	"CYBLE_HRS_BSL\000"
+ 758      455F4852 
+ 758      535F4253 
+ 758      4C00
+ 759              	.LASF53:
+ 760 02e8 4359424C 		.ascii	"CYBLE_EVT_GATTC_HANDLE_VALUE_NTF\000"
+ 760      455F4556 
+ 760      545F4741 
+ 760      5454435F 
+ 760      48414E44 
+ 761              	.LASF21:
+ 762 0309 4359424C 		.ascii	"CYBLE_EVT_STACK_BUSY_STATUS\000"
+ 762      455F4556 
+ 762      545F5354 
+ 762      41434B5F 
+ 762      42555359 
+ 763              	.LASF75:
+ 764 0325 4359424C 		.ascii	"CYBLE_DIS_MODEL_NUMBER\000"
+ 764      455F4449 
+ 764      535F4D4F 
+ 764      44454C5F 
+ 764      4E554D42 
+ 765              	.LASF25:
+ 766 033c 4359424C 		.ascii	"CYBLE_EVT_GAP_PASSKEY_DISPLAY_REQUEST\000"
+ 766      455F4556 
+ 766      545F4741 
+ 766      505F5041 
+ 766      53534B45 
+ 767              	.LASF70:
+ 768 0362 4359424C 		.ascii	"CYBLE_HRS_HRM\000"
+ 768      455F4852 
+ 768      535F4852 
+ 768      4D00
+ 769              	.LASF61:
+ 770 0370 4359424C 		.ascii	"CYBLE_EVT_L2CAP_CBFC_CONN_CNF\000"
+ 770      455F4556 
+ 770      545F4C32 
+ 770      4341505F 
+ 770      43424643 
+ 771              	.LASF69:
+ 772 038e 4359424C 		.ascii	"CYBLE_EVT_MAX\000"
+ 772      455F4556 
+ 772      545F4D41 
+ 772      5800
+ 773              	.LASF9:
+ 774 039c 75696E74 		.ascii	"uint8\000"
+ 774      3800
+ 775              	.LASF87:
+ 776 03a2 6E657742 		.ascii	"newBeatTime\000"
+ 776      65617454 
+ 776      696D6500 
+ 777              	.LASF57:
+ 778 03ae 4359424C 		.ascii	"CYBLE_EVT_L2CAP_CONN_PARAM_UPDATE_REQ\000"
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 20
+
+
+ 778      455F4556 
+ 778      545F4C32 
+ 778      4341505F 
+ 778      434F4E4E 
+ 779              	.LASF1:
+ 780 03d4 756E7369 		.ascii	"unsigned char\000"
+ 780      676E6564 
+ 780      20636861 
+ 780      7200
+ 781              	.LASF50:
+ 782 03e2 4359424C 		.ascii	"CYBLE_EVT_GATTS_PREP_WRITE_REQ\000"
+ 782      455F4556 
+ 782      545F4741 
+ 782      5454535F 
+ 782      50524550 
+ 783              	.LASF84:
+ 784 0401 6E657742 		.ascii	"newBeat\000"
+ 784      65617400 
+ 785              	.LASF72:
+ 786 0409 4359424C 		.ascii	"CYBLE_HRS_CPT\000"
+ 786      455F4852 
+ 786      535F4350 
+ 786      5400
+ 787              	.LASF0:
+ 788 0417 7369676E 		.ascii	"signed char\000"
+ 788      65642063 
+ 788      68617200 
+ 789              	.LASF47:
+ 790 0423 4359424C 		.ascii	"CYBLE_EVT_GATTS_WRITE_REQ\000"
+ 790      455F4556 
+ 790      545F4741 
+ 790      5454535F 
+ 790      57524954 
+ 791              	.LASF43:
+ 792 043d 4359424C 		.ascii	"CYBLE_EVT_GATTC_FIND_BY_TYPE_VALUE_RSP\000"
+ 792      455F4556 
+ 792      545F4741 
+ 792      5454435F 
+ 792      46494E44 
+ 793              	.LASF26:
+ 794 0464 4359424C 		.ascii	"CYBLE_EVT_GAP_AUTH_COMPLETE\000"
+ 794      455F4556 
+ 794      545F4741 
+ 794      505F4155 
+ 794      54485F43 
+ 795              	.LASF8:
+ 796 0480 756E7369 		.ascii	"unsigned int\000"
+ 796      676E6564 
+ 796      20696E74 
+ 796      00
+ 797              	.LASF36:
+ 798 048d 4359424C 		.ascii	"CYBLE_EVT_GATT_CONNECT_IND\000"
+ 798      455F4556 
+ 798      545F4741 
+ 798      54545F43 
+ 798      4F4E4E45 
+ 799              	.LASF5:
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 21
+
+
+ 800 04a8 6C6F6E67 		.ascii	"long unsigned int\000"
+ 800      20756E73 
+ 800      69676E65 
+ 800      6420696E 
+ 800      7400
+ 801              	.LASF23:
+ 802 04ba 4359424C 		.ascii	"CYBLE_EVT_GAP_AUTH_REQ\000"
+ 802      455F4556 
+ 802      545F4741 
+ 802      505F4155 
+ 802      54485F52 
+ 803              	.LASF62:
+ 804 04d1 4359424C 		.ascii	"CYBLE_EVT_L2CAP_CBFC_DISCONN_IND\000"
+ 804      455F4556 
+ 804      545F4C32 
+ 804      4341505F 
+ 804      43424643 
+ 805              	.LASF31:
+ 806 04f2 4359424C 		.ascii	"CYBLE_EVT_GAP_ENCRYPT_CHANGE\000"
+ 806      455F4556 
+ 806      545F4741 
+ 806      505F454E 
+ 806      43525950 
+ 807              	.LASF92:
+ 808 050f 2E5C4865 		.ascii	".\\HeartRateProcessing.c\000"
+ 808      61727452 
+ 808      61746550 
+ 808      726F6365 
+ 808      7373696E 
+ 809              	.LASF32:
+ 810 0527 4359424C 		.ascii	"CYBLE_EVT_GAP_CONNECTION_UPDATE_COMPLETE\000"
+ 810      455F4556 
+ 810      545F4741 
+ 810      505F434F 
+ 810      4E4E4543 
+ 811              	.LASF86:
+ 812 0550 70726576 		.ascii	"previousBeatTime\000"
+ 812      696F7573 
+ 812      42656174 
+ 812      54696D65 
+ 812      00
+ 813              	.LASF14:
+ 814 0561 63686172 		.ascii	"char\000"
+ 814      00
+ 815              	.LASF59:
+ 816 0566 4359424C 		.ascii	"CYBLE_EVT_L2CAP_COMMAND_REJ\000"
+ 816      455F4556 
+ 816      545F4C32 
+ 816      4341505F 
+ 816      434F4D4D 
+ 817              	.LASF3:
+ 818 0582 73686F72 		.ascii	"short unsigned int\000"
+ 818      7420756E 
+ 818      7369676E 
+ 818      65642069 
+ 818      6E7400
+ 819              	.LASF90:
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 22
+
+
+ 820 0595 5F426F6F 		.ascii	"_Bool\000"
+ 820      6C00
+ 821              	.LASF81:
+ 822 059b 4359424C 		.ascii	"CYBLE_DIS_REG_CERT_DATA\000"
+ 822      455F4449 
+ 822      535F5245 
+ 822      475F4345 
+ 822      52545F44 
+ 823              	.LASF45:
+ 824 05b3 4359424C 		.ascii	"CYBLE_EVT_GATTC_READ_BLOB_RSP\000"
+ 824      455F4556 
+ 824      545F4741 
+ 824      5454435F 
+ 824      52454144 
+ 825              	.LASF52:
+ 826 05d1 4359424C 		.ascii	"CYBLE_EVT_GATTC_EXEC_WRITE_RSP\000"
+ 826      455F4556 
+ 826      545F4741 
+ 826      5454435F 
+ 826      45584543 
+ 827              	.LASF10:
+ 828 05f0 75696E74 		.ascii	"uint32\000"
+ 828      333200
+ 829              	.LASF68:
+ 830 05f7 4359424C 		.ascii	"CYBLE_EVT_PENDING_FLASH_WRITE\000"
+ 830      455F4556 
+ 830      545F5045 
+ 830      4E44494E 
+ 830      475F464C 
+ 831              	.LASF65:
+ 832 0615 4359424C 		.ascii	"CYBLE_EVT_L2CAP_CBFC_RX_CREDIT_IND\000"
+ 832      455F4556 
+ 832      545F4C32 
+ 832      4341505F 
+ 832      43424643 
+ 833              	.LASF13:
+ 834 0638 646F7562 		.ascii	"double\000"
+ 834      6C6500
+ 835              	.LASF89:
+ 836 063f 74776F53 		.ascii	"twoSampleTime\000"
+ 836      616D706C 
+ 836      6554696D 
+ 836      6500
+ 837              	.LASF66:
+ 838 064d 4359424C 		.ascii	"CYBLE_EVT_L2CAP_CBFC_TX_CREDIT_IND\000"
+ 838      455F4556 
+ 838      545F4C32 
+ 838      4341505F 
+ 838      43424643 
+ 839              	.LASF83:
+ 840 0670 4359424C 		.ascii	"CYBLE_DIS_CHAR_COUNT\000"
+ 840      455F4449 
+ 840      535F4348 
+ 840      41525F43 
+ 840      4F554E54 
+ 841              	.LASF28:
+ 842 0685 4359424C 		.ascii	"CYBLE_EVT_GAPP_ADVERTISEMENT_START_STOP\000"
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 23
+
+
+ 842      455F4556 
+ 842      545F4741 
+ 842      50505F41 
+ 842      44564552 
+ 843              	.LASF19:
+ 844 06ad 4359424C 		.ascii	"CYBLE_EVT_HARDWARE_ERROR\000"
+ 844      455F4556 
+ 844      545F4841 
+ 844      52445741 
+ 844      52455F45 
+ 845              	.LASF64:
+ 846 06c6 4359424C 		.ascii	"CYBLE_EVT_L2CAP_CBFC_DATA_READ\000"
+ 846      455F4556 
+ 846      545F4C32 
+ 846      4341505F 
+ 846      43424643 
+ 847              	.LASF58:
+ 848 06e5 4359424C 		.ascii	"CYBLE_EVT_L2CAP_CONN_PARAM_UPDATE_RSP\000"
+ 848      455F4556 
+ 848      545F4C32 
+ 848      4341505F 
+ 848      434F4E4E 
+ 849              	.LASF22:
+ 850 070b 4359424C 		.ascii	"CYBLE_EVT_GAPC_SCAN_PROGRESS_RESULT\000"
+ 850      455F4556 
+ 850      545F4741 
+ 850      50435F53 
+ 850      43414E5F 
+ 851              	.LASF40:
+ 852 072f 4359424C 		.ascii	"CYBLE_EVT_GATTC_READ_BY_GROUP_TYPE_RSP\000"
+ 852      455F4556 
+ 852      545F4741 
+ 852      5454435F 
+ 852      52454144 
+ 853              	.LASF78:
+ 854 0756 4359424C 		.ascii	"CYBLE_DIS_FIRMWARE_REV\000"
+ 854      455F4449 
+ 854      535F4649 
+ 854      524D5741 
+ 854      52455F52 
+ 855              	.LASF93:
+ 856 076d 433A5C55 		.ascii	"C:\\Users\\Zachary\\Desktop\\BLE Lab 3\\BLE Lab 3.c"
+ 856      73657273 
+ 856      5C5A6163 
+ 856      68617279 
+ 856      5C446573 
+ 857 079b 7964736E 		.ascii	"ydsn\000"
+ 857      00
+ 858              	.LASF39:
+ 859 07a0 4359424C 		.ascii	"CYBLE_EVT_GATTC_XCHNG_MTU_RSP\000"
+ 859      455F4556 
+ 859      545F4741 
+ 859      5454435F 
+ 859      5843484E 
+ 860              	.LASF77:
+ 861 07be 4359424C 		.ascii	"CYBLE_DIS_HARDWARE_REV\000"
+ 861      455F4449 
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 24
+
+
+ 861      535F4841 
+ 861      52445741 
+ 861      52455F52 
+ 862              	.LASF18:
+ 863 07d5 4359424C 		.ascii	"CYBLE_EVT_TIMEOUT\000"
+ 863      455F4556 
+ 863      545F5449 
+ 863      4D454F55 
+ 863      5400
+ 864              	.LASF67:
+ 865 07e7 4359424C 		.ascii	"CYBLE_EVT_L2CAP_CBFC_DATA_WRITE_IND\000"
+ 865      455F4556 
+ 865      545F4C32 
+ 865      4341505F 
+ 865      43424643 
+ 866              	.LASF33:
+ 867 080b 4359424C 		.ascii	"CYBLE_EVT_GAPC_SCAN_START_STOP\000"
+ 867      455F4556 
+ 867      545F4741 
+ 867      50435F53 
+ 867      43414E5F 
+ 868              	.LASF88:
+ 869 082a 6164634F 		.ascii	"adcOut\000"
+ 869      757400
+ 870              	.LASF42:
+ 871 0831 4359424C 		.ascii	"CYBLE_EVT_GATTC_FIND_INFO_RSP\000"
+ 871      455F4556 
+ 871      545F4741 
+ 871      5454435F 
+ 871      46494E44 
+ 872              	.LASF95:
+ 873 084f 68656172 		.ascii	"heartRate\000"
+ 873      74526174 
+ 873      6500
+ 874              	.LASF51:
+ 875 0859 4359424C 		.ascii	"CYBLE_EVT_GATTS_EXEC_WRITE_REQ\000"
+ 875      455F4556 
+ 875      545F4741 
+ 875      5454535F 
+ 875      45584543 
+ 876              	.LASF30:
+ 877 0878 4359424C 		.ascii	"CYBLE_EVT_GAP_DEVICE_DISCONNECTED\000"
+ 877      455F4556 
+ 877      545F4741 
+ 877      505F4445 
+ 877      56494345 
+ 878              	.LASF56:
+ 879 089a 4359424C 		.ascii	"CYBLE_EVT_GATTS_DATA_SIGNED_CMD_REQ\000"
+ 879      455F4556 
+ 879      545F4741 
+ 879      5454535F 
+ 879      44415441 
+ 880              	.LASF91:
+ 881 08be 474E5520 		.ascii	"GNU C 4.8.4 20140526 (release) [ARM/embedded-4_8-br"
+ 881      4320342E 
+ 881      382E3420 
+ 881      32303134 
+ARM GAS  C:\Users\Zachary\AppData\Local\Temp\ccb3eB8a.s 			page 25
+
+
+ 881      30353236 
+ 882 08f1 616E6368 		.ascii	"anch revision 211358] -mcpu=cortex-m0 -mthumb -g -O"
+ 882      20726576 
+ 882      6973696F 
+ 882      6E203231 
+ 882      31333538 
+ 883 0924 30202D66 		.ascii	"0 -ffunction-sections\000"
+ 883      66756E63 
+ 883      74696F6E 
+ 883      2D736563 
+ 883      74696F6E 
+ 884              	.LASF80:
+ 885 093a 4359424C 		.ascii	"CYBLE_DIS_SYSTEM_ID\000"
+ 885      455F4449 
+ 885      535F5359 
+ 885      5354454D 
+ 885      5F494400 
+ 886              	.LASF74:
+ 887 094e 4359424C 		.ascii	"CYBLE_DIS_MANUFACTURER_NAME\000"
+ 887      455F4449 
+ 887      535F4D41 
+ 887      4E554641 
+ 887      43545552 
+ 888              	.LASF82:
+ 889 096a 4359424C 		.ascii	"CYBLE_DIS_PNP_ID\000"
+ 889      455F4449 
+ 889      535F504E 
+ 889      505F4944 
+ 889      00
+ 890              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 4.8.4 20140526 (release) [ARM/embedded-4_8-br
